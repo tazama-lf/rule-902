@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
-name: Rule Executer - Rule processor Automation
+name: Rule Executer - Rule processor Automation - dev
 
 on:
   push:
@@ -10,6 +10,7 @@ on:
 
 jobs:
   automate-rule-executer:
+    if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GH_TOKEN_LIB }}
@@ -27,20 +28,40 @@ jobs:
       # Step 2: Clone Rule Executer Repo and delete package-lock.json file
       - name: Clone Rule Executer Repo
         run: |
-          echo "Cloning Rule Executer repo"
+          echo "Cloning Rule Executer repo and removing package-lock.json file..."
           git clone https://github.com/tazama-lf/rule-executer -b dev
           cd rule-executer 
           sed -i 's/${GH_TOKEN}/${{ secrets.GH_TOKEN_LIB }}/' .npmrc 
           cat .npmrc
+          rm package-lock.json
           cd ..
           echo "Clone completed."
+
+      # Step 3: Duplicate Rule Executer Folder to 'rule-executer-902'
+      - name: Duplicate Rule Executer Folder
+        run: |
+          echo "Duplicating Rule Executer folder..."
+          cp -R rule-executer rule-executer-902
+          echo "Rule Executer folders duplicated."
+
+      # Step 4: Update the version in package.json and rule number in Dockerfile
+      - name: Modify Rule Executer Files
+        run: |
+          echo "Modifying rule-executer-902 files..."
+          sed -i 's/rule-901@3.0.0-rc.2/rule-902@3.0.0-rc.2/' rule-executer-902/package.json
+          sed -i 's/901/902/' rule-executer-902/Dockerfile
+
+      # Verify Changes in modified files
+      - name: Verify Changes
+        run: |
+          cat rule-executer-902/package.json
+          cat rule-executer-902/Dockerfile
 
       # Step 5: Build Rule Packages
       - name: Build Rule Packages
         run: |
           echo "Building rule packages..."
-          cd rule-executer && npm install
-          cd ..
+          cd rule-executer-902 && npm install
           echo "Rule packages built."
 
       # Step 6: Build and Push Docker Image
@@ -50,8 +71,7 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
           echo "Packaging rule processors into Docker image..."
-          cd rule-executer && cat Dockerfile
-          docker build -t tazamaorg/rule-902:rc .
+          docker build -t tazamaorg/rule-902:rc rule-executer-902
           echo "Logging into DockerHub..."
           echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
           docker push tazamaorg/rule-902:rc
