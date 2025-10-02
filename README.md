@@ -19,7 +19,7 @@ Consider reading more about the rule-executer. If this is your first time learni
 
 | Title |  |
 | ------ | ------ |
-| `Description` | Number of outgoing transactions - debtor |
+| `Description` | Number of incoming transactions - creditor |
 | `Perspective` |  |
 | `Historical depth` |  |
 | `Behaviour Focus` |  |
