@@ -1,0 +1,71 @@
+{
+  "name": "@tazama-lf/rule-902",
+  "version": "3.0.0-rc.1",
+  "description": "Rule 902 is to calculate the number of transactions the creditor has received over a period",
+  "main": "index.ts",
+  "files": [
+    "lib"
+  ],
+  "publishConfig": {
+    "@tazama-lf:registry": "https://npm.pkg.github.com/",
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "clean": "npx rimraf lib node_modules coverage package-lock.json",
+    "fix": "npm run fix:prettier && npm run fix:eslint",
+    "fix:eslint": "eslint --fix",
+    "fix:prettier": "prettier --write \"**/*.ts\"",
+    "lint": "npm run lint:eslint && npm run lint:prettier",
+    "lint:eslint": "eslint",
+    "lint:eslint-unused": "eslint --report-unused-disable-directives",
+    "lint:eslint-no-inline": "eslint --no-inline-config",
+    "lint:prettier": "prettier --check \"**/*.ts\"",
+    "prepare": "husky",
+    "test": "jest --config=jest.config.ts --passWithNoTests --runInBand --detectOpenHandles --forceExit",
+    "test:watch": "jest --config=jest.config.ts --watch",
+    "test:coverage": "jest --config=jest.config.ts --coverage --passWithNoTests --runInBand --detectOpenHandles --forceExit",
+    "coverage": "npm run test:coverage && echo 'Coverage report generated in ./coverage/lcov-report/index.html'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tazama-lf/rule-902.git"
+  },
+  "keywords": [
+    "rule-091"
+  ],
+  "author": "Tazama.org",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/tazama-lf/rule-902/issues"
+  },
+  "homepage": "https://github.com/tazama-lf/rule-902#readme",
+  "devDependencies": {
+    "@eslint-community/eslint-plugin-eslint-comments": "^4.5.0",
+    "@stylistic/eslint-plugin": "^5.2.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.0.15",
+    "@typescript-eslint/eslint-plugin": "^8.37.0",
+    "@typescript-eslint/parser": "^8.37.0",
+    "eslint": "^9.31.0",
+    "eslint-config-love": "^121.0.0",
+    "eslint-config-prettier": "^10.1.8",
+    "husky": "9.1.7",
+    "ioredis-mock": "^8.9.0",
+    "jest": "^30.0.4",
+    "lint-staged": "^16.1.2",
+    "prettier": "^3.6.2",
+    "ts-jest": "^29.4.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "lint-staged": {
+    "*.{js,ts}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
+  "dependencies": {
+    "@tazama-lf/frms-coe-lib": "6.0.0-rc.9"
+  }
+}
