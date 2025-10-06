@@ -29,5 +29,5 @@ jobs:
           # Map the conventional commit types to corresponding GitHub labels
           custom_labels: '{"build": "build", "ci": "CI/CD", "docs": "documentation", "feat": "enhancement", "fix": "bug", "perf": "performance", "refactor": "refactor", "style": "style", "test": "test", "feat!": "enhancement breaking change"}'
           # Use a personal access token (GITHUB_TOKEN) stored in GitHub secrets for authentication
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_TOKEN_LIB }}
           add_label: 'true'
