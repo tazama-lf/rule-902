@@ -52,10 +52,17 @@ jobs:
           echo "Modifying rule-executer-902 files..."
           packageVersion=$(jq -r '.version' package.json)
           echo "Fetched version from package.json: $packageVersion"
-          rule901Version=$(jq -r '.dependencies["@frmscoe/rule-901"] // .dependencies["@tazama-lf/rule-901"]' rule-executer-902/package.json | sed 's/^[^0-9]*//')
+          # Extract rule-901 version, ensuring only the version number is captured
+          rule901Version=$(jq -r '.dependencies["@frmscoe/rule-901"] // .dependencies["@tazama-lf/rule-901"]' rule-executer-902/package.json | grep -o '[0-9][0-9.]*-rc\.[0-9]\+')
+          if [ -z "$rule901Version" ]; then
+            echo "❌ Error: Could not determine rule-901 version in rule-executer-902/package.json"
+            exit 1
+          fi
           echo "Fetched rule-901 version from rule-executer package.json: $rule901Version"
+          # Replace rule-901 with rule-902 using the packageVersion directly
           sed -i "s/rule-901@$rule901Version/rule-902@$packageVersion/" rule-executer-902/package.json
           sed -i 's/901/902/' rule-executer-902/Dockerfile
+          echo "Successfully modified rule-executer-902 files."
 
       # Verify Changes in modified files
       - name: Verify Changes
