@@ -47,20 +47,39 @@ jobs:
           echo "Rule Executer folders duplicated."
 
       # Step 4: Update the version in package.json and rule number in Dockerfile
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+        
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+      
       - name: Modify Rule Executer Files
         run: |
           echo "Modifying rule-executer-902 files..."
-          packageVersion=$(jq -r '.version' package.json)
-          echo "Fetched version from package.json: $packageVersion"
-          # Extract rule-901 version, ensuring only the version number is captured
-          rule901Version=$(jq -r '.dependencies["@frmscoe/rule-901"] // .dependencies["@tazama-lf/rule-901"]' rule-executer-902/package.json | grep -o '[0-9][0-9.]*-rc\.[0-9]\+')
-          if [ -z "$rule901Version" ]; then
-            echo "❌ Error: Could not determine rule-901 version in rule-executer-902/package.json"
+          # Extract rule901Version from cloned rule-executer/package.json (dependencies.rule line)
+          rule901Value=$(cd rule-executer && jq -r '.dependencies.rule // empty' package.json)
+          if [ -z "$rule901Value" ]; then
+            echo "❌ Error: Could not find 'rule' dependency in rule-executer/package.json"
             exit 1
           fi
-          echo "Fetched rule-901 version from rule-executer package.json: $rule901Version"
-          # Replace rule-901 with rule-902 using the packageVersion directly
-          sed -i "s/rule-901@$rule901Version/rule-902@$packageVersion/" rule-executer-902/package.json
+          rule901Version=$(echo "$rule901Value" | sed -n 's/.*@tazama-lf\/rule-901@\([^@]*\).*/\1/p')
+          if [ -z "$rule901Version" ]; then
+            echo "❌ Error: Could not extract rule901Version from rule-executer/package.json"
+            exit 1
+          fi
+          echo "Fetched rule901Version from cloned rule-executer/package.json: $rule901Version"
+          
+          # Extract rule902Version using npm command (from npm registry via GitHub Actions)
+          rule902Version=$(npm view @tazama-lf/rule-902 version)
+          if [ -z "$rule902Version" ]; then
+            echo "❌ Error: Could not fetch rule902Version using npm view"
+            exit 1
+          fi
+          echo "Fetched rule902Version using npm: $rule902Version"
+          
+          sed -i "s/rule-901@${rule901Version}/rule-902@${rule902Version}/g" rule-executer-902/package.json
           sed -i 's/901/902/' rule-executer-902/Dockerfile
           echo "Successfully modified rule-executer-902 files."
 
