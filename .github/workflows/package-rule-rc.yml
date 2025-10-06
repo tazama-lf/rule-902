@@ -7,7 +7,7 @@ on:
     branches:
       - dev
   repository_dispatch:
-    types: [rule-executer-update]
+    types: [rule-executer-update] # Matches event-type from dispatch
   workflow_dispatch:
 
 jobs:
@@ -83,7 +83,6 @@ jobs:
           echo "Fetched rule902Version using npm: $rule902Version"
           
           # Update namespace and rule dependency
-          sed -i 's/npm:@tazama-lf/npm:@frmscoe/' rule-executer-902/package.json
           sed -i "s/rule-901@${rule901Version}/rule-902@${rule902Version}/g" rule-executer-902/package.json
           sed -i 's/901/902/' rule-executer-902/Dockerfile
           echo "Successfully modified rule-executer-902 files."
