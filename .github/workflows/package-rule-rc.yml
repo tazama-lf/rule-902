@@ -25,7 +25,7 @@ jobs:
       - name: Set up NPM authentication
         run: |
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.GH_TOKEN_LIB }}" > ~/.npmrc
-          cat .npmrc
+          cat ~/.npmrc
 
       # Step 2: Clone Rule Executer Repo and delete package-lock.json file
       - name: Clone Rule Executer Repo
@@ -71,14 +71,18 @@ jobs:
           fi
           echo "Fetched rule901Version from cloned rule-executer/package.json: $rule901Version"
           
-          # Extract rule902Version using npm command (from npm registry via GitHub Actions)
-          rule902Version=$(npm view @tazama-lf/rule-902 version)
-          if [ -z "$rule902Version" ]; then
-            echo "❌ Error: Could not fetch rule902Version using npm view"
+          # Extract rule902Version from tazama-lf/rule-902/package.json using GitHub API
+          rule902Version=$(curl -s -H "Authorization: Bearer ${{ secrets.GH_TOKEN_LIB }}" \
+            https://api.github.com/repos/tazama-lf/rule-902/contents/package.json | \
+            jq -r '.content' | base64 -d | jq -r '.version')
+          if [ -z "$rule902Version" ] || [ "$rule902Version" = "null" ]; then
+            echo "❌ Error: Could not fetch rule902Version from tazama-lf/rule-902/package.json"
             exit 1
           fi
-          echo "Fetched rule902Version using npm: $rule902Version"
+          echo "Fetched rule902Version from tazama-lf/rule-902/package.json: $rule902Version"
           
+          # Update namespace and rule dependency
+          sed -i 's/npm:@tazama-lf/npm:@frmscoe/' rule-executer-902/package.json
           sed -i "s/rule-901@${rule901Version}/rule-902@${rule902Version}/g" rule-executer-902/package.json
           sed -i 's/901/902/' rule-executer-902/Dockerfile
           echo "Successfully modified rule-executer-902 files."
@@ -110,7 +114,7 @@ jobs:
           docker rmi tazamaorg/rule-902:rc
           echo "Docker Image creation and push complete."
 
-      # Step 6: Send Slack Notification
+      # Step 7: Send Slack Notification
       - name: Send Slack Notification
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
