@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
-name: Rule Executer - Rule processor Automation - dev
+name: Rule Executer - Rule processor Automation
 
 on:
   push:
@@ -48,7 +48,12 @@ jobs:
       - name: Modify Rule Executer Files
         run: |
           echo "Modifying rule-executer-902 files..."
-          sed -i 's/rule-901@3.0.0-rc.2/rule-902@3.0.0-rc.2/' rule-executer-902/package.json
+          packageVersion=$(jq -r '.version' package.json)
+          echo "Fetched version from package.json: $packageVersion"
+          rule901Version=$(jq -r '.dependencies["@frmscoe/rule-901"] // .dependencies["@tazama-lf/rule-901"]' rule-executer-902/package.json | sed 's/^[^0-9]*//')
+          echo "Fetched rule-901 version from rule-executer package.json: $rule901Version"
+          sed -i 's/npm:@tazama-lf/npm:@frmscoe/' rule-executer-902/package.json
+          sed -i "s/rule-901@$rule901Version/rule-902@$packageVersion/" rule-executer-902/package.json
           sed -i 's/901/902/' rule-executer-902/Dockerfile
 
       # Verify Changes in modified files
@@ -71,7 +76,7 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
           echo "Packaging rule processors into Docker image..."
-          docker build -t tazamaorg/rule-902:rc rule-executer-902
+          docker build --no-cache -t tazamaorg/rule-902:rc rule-executer-902
           echo "Logging into DockerHub..."
           echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
           docker push tazamaorg/rule-902:rc
