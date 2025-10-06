@@ -6,6 +6,8 @@ on:
   push:
     branches:
       - dev
+  repository_dispatch:
+    types: [rule-executer-update]  # Matches event-type from dispatch
   workflow_dispatch:
 
 jobs:
@@ -52,7 +54,6 @@ jobs:
           echo "Fetched version from package.json: $packageVersion"
           rule901Version=$(jq -r '.dependencies["@frmscoe/rule-901"] // .dependencies["@tazama-lf/rule-901"]' rule-executer-902/package.json | sed 's/^[^0-9]*//')
           echo "Fetched rule-901 version from rule-executer package.json: $rule901Version"
-          sed -i 's/npm:@tazama-lf/npm:@frmscoe/' rule-executer-902/package.json
           sed -i "s/rule-901@$rule901Version/rule-902@$packageVersion/" rule-executer-902/package.json
           sed -i 's/901/902/' rule-executer-902/Dockerfile
 
