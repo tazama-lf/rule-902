@@ -45,12 +45,44 @@ jobs:
           echo "Rule Executer folders duplicated."
 
       # Step 4: Update the version in package.json and rule number in Dockerfile
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+        
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+      
       - name: Modify Rule Executer Files
         run: |
           echo "Modifying rule-executer-902 files..."
-          sed -i 's/npm:@tazama-lf/npm:@frmscoe/' rule-executer-902/package.json
-          sed -i 's/rule-901@2.2.0/rule-902@3.0.0/' rule-executer-902/package.json
+          # Extract rule901Version from cloned rule-executer/package.json (dependencies.rule line)
+          rule901Value=$(cd rule-executer && jq -r '.dependencies.rule // empty' package.json)
+          if [ -z "$rule901Value" ]; then
+            echo "❌ Error: Could not find 'rule' dependency in rule-executer/package.json"
+            exit 1
+          fi
+          rule901Version=$(echo "$rule901Value" | sed -n 's/.*@tazama-lf\/rule-901@\([^@]*\).*/\1/p')
+          if [ -z "$rule901Version" ]; then
+            echo "❌ Error: Could not extract rule901Version from rule-executer/package.json"
+            exit 1
+          fi
+          echo "Fetched rule901Version from cloned rule-executer/package.json: $rule901Version"
+          
+          # Extract rule902Version from tazama-lf/rule-902/package.json using GitHub API
+          rule902Version=$(curl -s -H "Authorization: Bearer ${{ secrets.GH_TOKEN_LIB }}" \
+            https://api.github.com/repos/tazama-lf/rule-902/contents/package.json | \
+            jq -r '.content' | base64 -d | jq -r '.version')
+          if [ -z "$rule902Version" ] || [ "$rule902Version" = "null" ]; then
+            echo "❌ Error: Could not fetch rule902Version from tazama-lf/rule-902/package.json"
+            exit 1
+          fi
+          echo "Fetched rule902Version from tazama-lf/rule-902/package.json: $rule902Version"
+          
+          # Update namespace and rule dependency
+          sed -i "s/rule-901@${rule901Version}/rule-902@${rule902Version}/g" rule-executer-902/package.json
           sed -i 's/901/902/' rule-executer-902/Dockerfile
+          echo "Successfully modified rule-executer-902 files."
 
       # Verify Changes in modified files
       - name: Verify Changes
