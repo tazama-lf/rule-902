@@ -1,6 +1,6 @@
 {
   "name": "@tazama-lf/rule-902",
-  "version": "3.0.0-rc.3",
+  "version": "3.0.0-rc.4",
   "description": "Rule 902 is to calculate the number of transactions the creditor has received over a period",
   "main": "index.ts",
   "files": [
@@ -66,6 +66,6 @@
     ]
   },
   "dependencies": {
-    "@tazama-lf/frms-coe-lib": "6.0.0-rc.12"
+    "@tazama-lf/frms-coe-lib": "6.0.0-rc.13"
   }
 }
