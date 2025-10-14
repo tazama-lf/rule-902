@@ -53,14 +53,16 @@ export async function handleTransaction(
   const currentPacs002TimeFrame = req.transaction.FIToFIPmtSts.GrpHdr.CreDtTm;
   const creditorAccountId = req.DataCache.cdtrAcctId;
   const maxQueryRange: number = ruleConfig.config.parameters.maxQueryRange as number;
+  const tenantId = req.transaction.TenantId;
 
-  const values = [creditorAccountId, currentPacs002TimeFrame, maxQueryRange];
+  const values = [creditorAccountId, currentPacs002TimeFrame, maxQueryRange, tenantId];
 
   const queryString = `SELECT COUNT(*)::int AS length
 FROM transaction tr
 WHERE tr.source = $1
 AND tr."txtp" = 'pacs.002.001.12'
-AND ($2::timestamptz - tr."credttm"::timestamptz) <= $3 * interval '1 millisecond';`;
+AND ($2::timestamptz - tr."credttm"::timestamptz) <= $3 * interval '1 millisecond'
+AND tr.tenantId = $4;`;
 
   // Step 3: Query Execution
 

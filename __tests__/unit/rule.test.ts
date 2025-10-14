@@ -83,6 +83,7 @@ const loggerService: LoggerService = new LoggerService({ maxCPU: 1, functionName
 const ruleConfig: RuleConfig = {
   id: '901@1.0.0',
   cfg: '1.0.0',
+  tenantId: 'DEFAULT',
   desc: 'Number of outgoing transactions - debtor',
   config: {
     parameters: {
@@ -124,6 +125,7 @@ beforeAll(async () => {
     cfg: '1.0.0',
     subRuleRef: '.00',
     reason: '',
+    tenantId: 'DEFAULT',
   };
 });
 
@@ -158,7 +160,7 @@ describe('Happy path', () => {
     const res = await handleTransaction(req, determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager);
 
     expect(res).toEqual(
-      JSON.parse('{"id":"901@1.0.0", "cfg":"1.0.0","subRuleRef":".01","reason":"The debtor has performed one transaction to date"}'),
+      JSON.parse('{"id":"901@1.0.0", "cfg":"1.0.0","subRuleRef":".01","reason":"The debtor has performed one transaction to date", "tenantId": "DEFAULT"}'),
     );
   });
 
@@ -171,7 +173,7 @@ describe('Happy path', () => {
 
     expect(res).toEqual(
       JSON.parse(
-        '{"id":"901@1.0.0", "cfg":"1.0.0","subRuleRef":".02","reason":"The debtor has performed two or three transactions to date"}',
+        '{"id":"901@1.0.0", "cfg":"1.0.0","subRuleRef":".02","reason":"The debtor has performed two or three transactions to date", "tenantId": "DEFAULT"}',
       ),
     );
   });
@@ -185,7 +187,7 @@ describe('Happy path', () => {
 
     expect(res).toEqual(
       JSON.parse(
-        '{"id":"901@1.0.0", "cfg":"1.0.0","subRuleRef":".02","reason":"The debtor has performed two or three transactions to date"}',
+        '{"id":"901@1.0.0", "cfg":"1.0.0","subRuleRef":".02","reason":"The debtor has performed two or three transactions to date", "tenantId": "DEFAULT"}',
       ),
     );
   });
@@ -198,7 +200,7 @@ describe('Happy path', () => {
     const res = await handleTransaction(req, determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager);
 
     expect(res).toEqual(
-      JSON.parse('{"id":"901@1.0.0", "cfg":"1.0.0","subRuleRef":".03","reason":"The debtor has performed 4 or more transactions to date"}'),
+      JSON.parse('{"id":"901@1.0.0", "cfg":"1.0.0","subRuleRef":".03","reason":"The debtor has performed 4 or more transactions to date", "tenantId": "DEFAULT"}'),
     );
   });
 });
@@ -211,7 +213,7 @@ describe('Exit conditions', () => {
     const res = await handleTransaction(newReq, determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager);
 
     expect(res).toEqual(
-      JSON.parse('{"id":"901@1.0.0", "cfg":"1.0.0","subRuleRef":".x00","reason":"Incoming transaction is unsuccessful"}'),
+      JSON.parse('{"id":"901@1.0.0", "cfg":"1.0.0","subRuleRef":".x00","reason":"Incoming transaction is unsuccessful", "tenantId": "DEFAULT"}'),
     );
   });
 });
