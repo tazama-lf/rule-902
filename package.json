@@ -67,6 +67,6 @@
     ]
   },
   "dependencies": {
-    "@tazama-lf/frms-coe-lib": "6.0.0-postgres.alpha.11"
+    "@tazama-lf/frms-coe-lib": "6.0.0"
   }
 }
