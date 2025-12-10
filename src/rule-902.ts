@@ -16,7 +16,7 @@ export async function handleTransaction(
   ruleConfig: RuleConfig,
   databaseManager: DatabaseManagerInstance<RuleExecutorConfig>,
 ): Promise<RuleResult> {
-  const context = `Rule-${ruleConfig.id ? ruleConfig.id : '<unresolved>'} handleTransaction()`;
+  const context = `Rule-${ruleConfig.id} handleTransaction()`;
   const msgId = req.transaction.FIToFIPmtSts.GrpHdr.MsgId;
 
   loggerService.trace('Start - handle transaction', context, msgId);
@@ -75,15 +75,6 @@ AND tr.tenantId = $4;`;
   // Step 4: Query post-processing
 
   loggerService.trace('Step 4 - Query post-processing', context, msgId);
-
-  if (length == null) {
-    // 0 is a legal value
-    throw new Error('Data error: irretrievable transaction history');
-  }
-
-  if (typeof length !== 'number') {
-    throw new Error('Data error: query result type mismatch - expected a number');
-  }
 
   // Return control to the rule-executer for rule result calculation
 
