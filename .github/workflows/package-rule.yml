@@ -1,119 +1,14 @@
 # SPDX-License-Identifier: Apache-2.0
-
-name: Rule Executer - Rule processor Automation - main
-
+# This file is managed centrally — do not edit manually.
+# To change build behaviour, update the reusable workflow in tazama-lf/workflows.
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
-
 jobs:
-  automate-rule-executer:
-    if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
-    runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GH_TOKEN_LIB }}
-
-    steps:
-      # Step 1: Checkout repository
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set up NPM authentication
-        run: |
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GH_TOKEN_LIB }}" > ~/.npmrc
-          cat .npmrc
-
-      # Step 2: Clone Rule Executer Repo and delete package-lock.json file
-      - name: Clone Rule Executer Repo
-        run: |
-          echo "Cloning Rule Executer repo and removing package-lock.json file..."
-          git clone https://github.com/tazama-lf/rule-executer -b main
-          cd rule-executer 
-          sed -i 's/${GH_TOKEN}/${{ secrets.GH_TOKEN_LIB }}/' .npmrc 
-          cat .npmrc
-          rm package-lock.json
-          cd ..
-          echo "Clone completed."
-
-      # Step 3: Duplicate Rule Executer Folder to 'rule-executer-902'
-      - name: Duplicate Rule Executer Folder
-        run: |
-          echo "Duplicating Rule Executer folder..."
-          cp -R rule-executer rule-executer-902
-          echo "Rule Executer folders duplicated."
-
-      # Step 4: Update the version in package.json and rule number in Dockerfile
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-        
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-      
-      - name: Modify Rule Executer Files
-        run: |
-          echo "Modifying rule-executer-902 files..."
-          # Extract rule901Version from cloned rule-executer/package.json (dependencies.rule line)
-          rule901Value=$(cd rule-executer && jq -r '.dependencies.rule // empty' package.json)
-          if [ -z "$rule901Value" ]; then
-            echo "❌ Error: Could not find 'rule' dependency in rule-executer/package.json"
-            exit 1
-          fi
-          rule901Version=$(echo "$rule901Value" | sed -n 's/.*@tazama-lf\/rule-901@\([^@]*\).*/\1/p')
-          if [ -z "$rule901Version" ]; then
-            echo "❌ Error: Could not extract rule901Version from rule-executer/package.json"
-            exit 1
-          fi
-          echo "Fetched rule901Version from cloned rule-executer/package.json: $rule901Version"
-          
-          # Extract rule902Version from tazama-lf/rule-902/package.json using GitHub API
-          rule902Version=$(curl -s -H "Authorization: Bearer ${{ secrets.GH_TOKEN_LIB }}" \
-            https://api.github.com/repos/tazama-lf/rule-902/contents/package.json | \
-            jq -r '.content' | base64 -d | jq -r '.version')
-          if [ -z "$rule902Version" ] || [ "$rule902Version" = "null" ]; then
-            echo "❌ Error: Could not fetch rule902Version from tazama-lf/rule-902/package.json"
-            exit 1
-          fi
-          echo "Fetched rule902Version from tazama-lf/rule-902/package.json: $rule902Version"
-          
-          # Update namespace and rule dependency
-          sed -i "s/rule-901@${rule901Version}/rule-902@${rule902Version}/g" rule-executer-902/package.json
-          sed -i 's/901/902/' rule-executer-902/Dockerfile
-          echo "Successfully modified rule-executer-902 files."
-
-      # Verify Changes in modified files
-      - name: Verify Changes
-        run: |
-          cat rule-executer-902/package.json
-          cat rule-executer-902/Dockerfile
-
-      # Step 5: Build Rule Packages
-      - name: Build Rule Packages
-        run: |
-          echo "Building rule packages..."
-          cd rule-executer-902 && npm install
-          echo "Rule packages built."
-
-      # Step 6: Build and Push Docker Image
-      - name: Build and Push Docker Image
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        run: |
-          echo "Packaging rule processors into Docker image..."
-          docker build -t tazamaorg/rule-902:3.0.0 rule-executer-902
-          echo "Logging into DockerHub..."
-          echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
-          docker push tazamaorg/rule-902:3.0.0
-          docker rmi tazamaorg/rule-902:3.0.0
-          echo "Docker Image creation and push complete."
-
-      # Step 6: Send Slack Notification
-      - name: Send Slack Notification
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        run: |
-          curl -X POST -H 'Content-type: application/json' --data '{"blocks": [{"type": "header","text": {"type": "plain_text","text": "New Rule Dockerhub Image published :ship:","emoji": true}},{"type": "section","fields": [{"type": "mrkdwn","text": "*Service:*\nRule-902"},{"type": "mrkdwn","text": "*Tazama Dockerhub:*\n<https://hub.docker.com/orgs/tazamaorg/repositories>"}]}]}' $SLACK_WEBHOOK_URL
+  build:
+    uses: tazama-lf/workflows/.github/workflows/package-rule.yml@main
+    with:
+      rule_number: "902"
+      rule_org: "tazama-lf"
+    secrets: inherit
