@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { type DatabaseManagerInstance, LoggerService, CreateDatabaseManager } from '@tazama-lf/frms-coe-lib';
-import { type Band, type RuleConfig, type RuleRequest, type RuleResult } from '@tazama-lf/frms-coe-lib/lib/interfaces';
+import { type Band, type Pacs002, type RuleConfig, type RuleRequest, type RuleResult } from '@tazama-lf/frms-coe-lib/lib/interfaces';
 import { CreateStorageManager } from '@tazama-lf/frms-coe-lib/lib/services/dbManager';
 import { handleTransaction } from '../../src';
 import { RuleExecutorConfig } from '../../src/rule-902';
@@ -20,7 +20,7 @@ jest.mock('@tazama-lf/frms-coe-lib', () => {
   };
 });
 
-const getMockRequest = (): RuleRequest => {
+const getMockRequest = (): RuleRequest<Pacs002> => {
   const quote = {
     transaction: JSON.parse(
       `{"TxTp":"pacs.002.001.12","FIToFIPmtSts":{"GrpHdr":{"MsgId":"6b444365119746c5be7dfb5516ba67c4","CreDtTm":"${new Date(
@@ -45,7 +45,7 @@ const getMockRequest = (): RuleRequest => {
       creDtTm: `${new Date(Date.now() - 60 * 1000).toISOString()}`,
     },
   };
-  return quote as RuleRequest;
+  return quote as RuleRequest<Pacs002>;
 };
 
 const databaseManagerConfig: RuleExecutorConfig = {
@@ -146,7 +146,7 @@ const determineOutcome = (value: number, ruleConfig: RuleConfig, ruleResult: Rul
   } else throw new Error('Value provided undefined, so cannot determine rule outcome');
   return ruleResult;
 };
-let req: RuleRequest;
+let req: RuleRequest<Pacs002>;
 beforeEach(() => {
   req = getMockRequest();
 });
@@ -208,7 +208,7 @@ describe('Happy path', () => {
 describe('Exit conditions', () => {
   test('Should respond with .x00: Incoming transaction is unsuccessful', async () => {
     const objClone = (req: Object) => JSON.parse(JSON.stringify(req));
-    const newReq: RuleRequest = objClone(req);
+    const newReq: RuleRequest<Pacs002> = objClone(req);
     newReq.transaction.FIToFIPmtSts.TxInfAndSts.TxSts = 'something else';
     const res = await handleTransaction(newReq, determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager);
 
@@ -224,7 +224,7 @@ describe('Error conditions', () => {
     databaseManager._eventHistory.query = mockQueryFn.mockResolvedValue({ rows: [{ length: 4 }]});
     jest.spyOn(databaseManager._eventHistory, 'query');
     const objClone = (req: Object) => JSON.parse(JSON.stringify(req));
-    const newReq: RuleRequest = objClone(req);
+    const newReq: RuleRequest<Pacs002> = objClone(req);
     newReq.transaction.FIToFIPmtSts.TxInfAndSts.TxSts = 'something else';
     const newConfig: RuleConfig = objClone(ruleConfig);
     newConfig.config.exitConditions![0].subRuleRef = 'something';
