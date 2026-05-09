@@ -65,6 +65,6 @@
     ]
   },
   "dependencies": {
-    "@tazama-lf/frms-coe-lib": "8.0.0-rc.1"
+    "@tazama-lf/frms-coe-lib": "8.0.0-rc.2"
   }
 }
