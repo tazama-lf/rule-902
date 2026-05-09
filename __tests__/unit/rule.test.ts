@@ -23,7 +23,7 @@ jest.mock('@tazama-lf/frms-coe-lib', () => {
 const getMockRequest = (): RuleRequest<Pacs002> => {
   const quote = {
     transaction: JSON.parse(
-      `{"TxTp":"pacs.002.001.12","FIToFIPmtSts":{"GrpHdr":{"MsgId":"6b444365119746c5be7dfb5516ba67c4","CreDtTm":"${new Date(
+      `{"TxTp":"pacs.002.001.12","TenantId":"DEFAULT","FIToFIPmtSts":{"GrpHdr":{"MsgId":"6b444365119746c5be7dfb5516ba67c4","CreDtTm":"${new Date(
         'Mon Dec 03 2021 09:24:48 GMT+0000',
       ).toISOString()}"},"TxInfAndSts":{"OrgnlInstrId":"5ab4fc7355de4ef8a75b78b00a681ed2","OrgnlEndToEndId":"2c516801007642dfb892944dde1cf845","TxSts":"ACCC","ChrgsInf":[{"Amt":{"Amt":307.14,"Ccy":"USD"},"Agt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp001"}}}},{"Amt":{"Amt":153.57,"Ccy":"USD"},"Agt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp001"}}}},{"Amt":{"Amt":30.71,"Ccy":"USD"},"Agt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}}}],"AccptncDtTm":"2021-12-03T15:36:16.000Z","InstgAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp001"}}},"InstdAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}}}}}`,
     ),
@@ -377,5 +377,21 @@ describe('Error conditions', () => {
     } catch (error) {
       expect((error as Error).message).toBe('Invalid ruleConfig provided - bands not provided or empty');
     }
+  });
+});
+
+describe('Unsupported transaction type', () => {
+  test('should return early with .err for unrecognised transaction type', async () => {
+    const querySpy = jest.fn();
+    databaseManager._eventHistory.query = querySpy;
+
+    const unsupportedReq = {
+      ...req,
+      transaction: { TxTp: 'unsupported.type.v1', TenantId: 'DEFAULT', someField: 'someValue' } as any,
+    };
+    const res = await handleTransaction(unsupportedReq, determineOutcome, ruleRes, loggerService, ruleConfig, databaseManager);
+    expect(res.subRuleRef).toBe('.err');
+    expect(res.reason).toBe('Unsupported transaction type');
+    expect(querySpy).not.toHaveBeenCalled();
   });
 });

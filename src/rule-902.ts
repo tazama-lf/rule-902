@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { DatabaseManagerInstance, LoggerService, ManagerConfig } from '@tazama-lf/frms-coe-lib';
-import type { OutcomeResult, Pacs002, RuleConfig, RuleRequest, RuleResult } from '@tazama-lf/frms-coe-lib/lib/interfaces';
+import { isPacs002Transaction } from '@tazama-lf/frms-coe-lib';
+import type { OutcomeResult, RuleConfig, RuleRequest, RuleResult } from '@tazama-lf/frms-coe-lib/lib/interfaces';
 
 export type RuleExecutorConfig = ManagerConfig &
   Required<Pick<ManagerConfig, 'rawHistory' | 'eventHistory' | 'configuration' | 'localCacheConfig'>>;
@@ -9,7 +10,7 @@ interface CountRow {
   length: number;
 }
 export async function handleTransaction(
-  req: RuleRequest<Pacs002>,
+  req: RuleRequest,
   determineOutcome: (value: number, ruleConfig: RuleConfig, ruleResult: RuleResult) => RuleResult,
   ruleRes: RuleResult,
   loggerService: LoggerService,
@@ -17,6 +18,12 @@ export async function handleTransaction(
   databaseManager: DatabaseManagerInstance<RuleExecutorConfig>,
 ): Promise<RuleResult> {
   const context = `Rule-${ruleConfig.id} handleTransaction()`;
+
+  if (!isPacs002Transaction(req.transaction)) {
+    loggerService.error('Unsupported transaction type', new Error('Unsupported transaction type'), context);
+    return { ...ruleRes, subRuleRef: '.err', reason: 'Unsupported transaction type' };
+  }
+
   const msgId = req.transaction.FIToFIPmtSts.GrpHdr.MsgId;
 
   loggerService.trace('Start - handle transaction', context, msgId);
