@@ -41,7 +41,7 @@
   },
   "homepage": "https://github.com/tazama-lf/rule-902#readme",
   "devDependencies": {
-    "@eslint-community/eslint-plugin-eslint-comments": "^4.5.0",
+    "@eslint-community/eslint-plugin-eslint-comments": "^4.7.1",
     "@stylistic/eslint-plugin": "^5.4.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.15",
