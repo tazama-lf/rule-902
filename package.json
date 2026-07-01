@@ -1,6 +1,6 @@
 {
   "name": "@tazama-lf/rule-902",
-  "version": "4.0.0-rc.5",
+  "version": "4.0.0-rc.6",
   "description": "Rule 902 is to calculate the number of transactions the creditor has received over a period",
   "main": "index.ts",
   "files": [
@@ -13,6 +13,7 @@
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "clean": "npx rimraf lib node_modules coverage package-lock.json",
+    "publish:dev": "npm publish --tag rc",
     "fix": "npm run fix:prettier && npm run fix:eslint",
     "fix:eslint": "eslint --fix",
     "fix:prettier": "prettier --write \"**/*.ts\"",
@@ -65,7 +66,11 @@
     ]
   },
   "dependencies": {
-    "@tazama-lf/frms-coe-lib": "8.0.0-rc.5",
+    "@tazama-lf/frms-coe-lib": "8.2.0-rc.6",
     "zod": "4.4.3"
+  },
+  "overrides": {
+    "uuid": "^11.1.1",
+    "@opentelemetry/core": "^2.8.0"
   }
 }
